@@ -36,7 +36,7 @@ var delegations_length = ""; // Number of current delegators
 var total_delegate = 0; // Total current delegated asset
 
 
-
+// COLLECT CURRENT STATUS OF VALIDATOR
 bot.command("validator", async (response) => {
     const validatorAddress = response.update.message.text.split('/validator ')[1].trim();
      val_addr = validatorAddress;
@@ -75,12 +75,34 @@ bot.command("validator", async (response) => {
 <b>Jailed Status: </b> <i> ${validator.jailed} </i> 
 <b>Delegator No.: </b> <i> ${delegations_length} </i>
 <b>Total delegate: </b> <i> ${total_delegate} </i>
-`
-   , { parse_mode: 'html' });
-
+` , { parse_mode: 'html' });
 });
 
-// MONITOR
+// QUERY BALANCES
+bot.command("balance", async (balance) => {
+        var wallet = balance.update.message.text.split('/balance ')[1].trim();
+        await axios.get(`https://haqq-api.onepiece-cosmos-explorer.xyz/bank/balances/${wallet}`)
+        .then((res) => {
+                var balances = res.data.result; // collect status of validator
+        console.log(balances);
+        bot.telegram.sendMessage(balance.chat.id, `
+        <b>Your balance: </b> <i> ${balances[0].amount} ${balances[0].denom} </i>
+        `, { parse_mode: 'html' });
+
+     }) .catch((e) => {
+                console.log(e);
+                bot.telegram.sendMessage(balance.chat.id, 'Can\'t get info of your wallet', {});
+     });
+});
+
+
+// MONITOR PERIODICALLY AND SEND ALERTING TO TELEBOT
+// Current support to query and alert when some event is happened
+// - Validator get Jail
+// - Validator changes status between Inactive/Active
+// - Number of Delegator is changed
+// - Total delegated asset is changed
+
 const cron = require('node-cron');
 let task = null;
 
