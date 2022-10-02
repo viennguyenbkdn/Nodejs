@@ -1,0 +1,109 @@
+const { Telegraf } = require('telegraf');
+const axios = require('axios').default;
+
+const TOKEN = "5562669561:AAHGZYLG_FR_Si8E6_xN-_lnU2jvaCcLMrI"
+const bot = new Telegraf(TOKEN);
+
+const SSH = require('simple-ssh');
+const ssh = new SSH({ host: '95.216.21.32', user: 'root', pass: 'Qu@ngvien03dt2' });
+
+
+
+bot.start((ctx) => ctx.reply("Welcome to HAQQ"));
+bot.help((ctx) => ctx.reply("Send me a sticker"));
+
+
+bot.on("sticker", (ctx) => ctx.reply("🐶"));
+
+/*
+bot.on("message", async (ctx) => {
+  const message = ctx.update.message.text;
+  if (message.match(/hello/)) {
+    ctx.reply("Xin chào");
+  } else {
+    ctx.reply("Hong hiểu...");
+  }
+});
+
+*/
+
+bot.on("message", async (ctx) => {
+    const msg = ctx.update.message.text;
+    
+    // ========================================================
+    // Checking Validator Info and Status	
+    //if (msg.match(/validator /)) 
+    if (msg.includes("/validator "))
+	{
+	 	const validatorAddress = msg.split('/validator ')[1].trim(); //validator address
+		await axios.get(`https://haqq-api.onepiece-cosmos-explorer.xyz/cosmos/staking/v1beta1/validators/${validatorAddress}`)
+		        .then((res) => {
+		            	const validator = res.data.validator; // collect status of validator
+				// Check whether validator active or not
+				var validator_status = "Inactive"
+				if (validator.status = "BOND_STATUS_BONDED") { validator_status = "Active" }
+				// Send status to Telebot
+            			bot.telegram.sendMessage(ctx.chat.id, `
+				<b>Nodename: </b> <span class="tg-spoiler"> ${validator.description.moniker} </span>
+				<b>Website: </b> <i> ${validator.description.website} </i>
+				<b>Details: </b> <i> ${validator.description.details} </i>
+				<b>Status: </b> <i> ${validator_status} </i>
+				<b>Unbonding at block height: </b> <i> ${validator.unbonding_height} </i>
+				<b>Unbonding at time: </b> <i> ${validator.unbonding_time} </i>
+				<b>Jailed Status: </b> <i> ${validator.jailed} </i> `
+        			, { parse_mode: 'html' });
+        			})
+        	.catch((e) => {
+            		console.log(e);
+            		bot.telegram.sendMessage(ctx.chat.id, 'Can\'t get info of validator', {});
+        		});	
+	}
+
+    // ========================================================
+    // Send fund between 2 wallet	
+    if (msg.includes("/query "))
+        {
+		const wallet = msg.split(' ')[1].trim();
+		const check = msg.split(' ')[2];
+		var exec_command = `/root/go/bin/haqqd q bank balances ${wallet}`;
+		// var exec_command = `/root/go/bin/haqqd tx bank send haqq1mc0kvscpucsndf948dnsrrpd954t9l4l9z4zjm haqq17c6sm68sfeuyxle5tswa28lcv4u8cvt29yt4gr 100aISLM --fees 100aISLM --gas=auto --gas-adjustment=1.4 -y --chain-id haqq_54211-2 --from viennguyen`	
+		if (`${check}` === "undefined")
+		{
+			ssh.exec(`${exec_command}`, 
+			{
+    				out: function(stdout) {
+        			// var msg = JSON.parse(stdout);
+        			// let msg2 = msg .NodeInfo
+       			 	// bot.telegram.sendMessage(ctx.chat.id, msg , { parse_mode: 'html'});
+				// console.log(stdout);
+			 	var balance = stdout.split('"')[1].trim() ;
+				var unit = stdout.split(/\n|:/)[5].trim() ;
+				ctx.reply(`Your balance is ${balance} ${unit}`);
+    				}			
+			}).start();
+		} 
+		else 
+		{
+			ctx.reply(`Too many queried wallets !!`);
+		}
+
+	}
+
+
+
+
+		// ctx.reply(val_addr)
+		// if (val_addr == null) {ctx.reply(`haha ${val_addr}`);}
+		// if (val_addr === '') { ctx.reply("No validator address") }
+		/*
+		const msg3 = msg.split('/validator')[2];
+		var unf = "undefined"
+		if (`${msg3}` === "undefined") { ctx.reply(`haha ${msg3}`); }
+		// ctx.reply(`${msg3}`);
+		// <b><span class="tg-spoiler" style=\"color:red\">Jailed Status:</span></b> <b><i>${validator.jailed}</i></b>
+		*/ 
+    
+});
+
+
+bot.launch();
