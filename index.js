@@ -4,8 +4,8 @@ const axios = require('axios').default;
 const TOKEN = "5562669561:AAHGZYLG_FR_Si8E6_xN-_lnU2jvaCcLMrI"
 const bot = new Telegraf(TOKEN);
 
-const SSH = require('simple-ssh');
-const ssh = new SSH({ host: '127.0.0.1', user: 'root', pass: 'Qu@ngvien03dt2' });
+// const SSH = require('simple-ssh');
+// const ssh = new SSH({ host: '127.0.0.1', user: 'root', pass: 'Qu@ngvien03dt2' });
 
 
 // START & HELP MESSAGE
@@ -22,8 +22,7 @@ bot.help((ctx) => ctx.reply(`
  <b> /validator YOUR_VALIDATOR_ADDRESS </b>
  - Run monitor: <b>/run</b>
  - Stop monitor: <b>/stop</b>
- - Query balance: <b>/query YOUR_WALLET_ADDR</b>
- - Check status: <b>/status</b>
+ - Query balance: <b>/balance YOUR_WALLET_ADDR</b>
 `, {parse_mode: 'html'}));
 
 
@@ -36,11 +35,11 @@ var delegations_length = ""; // Number of current delegators
 var total_delegate = 0; // Total current delegated asset
 
 
-// COLLECT CURRENT STATUS OF VALIDATOR
+
 bot.command("validator", async (response) => {
-    const validatorAddress = response.update.message.text.split('/validator ')[1].trim();
+    var validatorAddress = response.update.message.text.split('/validator ')[1].trim();
      val_addr = validatorAddress;
-    
+     total_delegate = 0; 
     // VALIDATOR INFO
     await axios.get(`https://haqq-api.onepiece-cosmos-explorer.xyz/cosmos/staking/v1beta1/validators/${val_addr}`)
     .then((res) => {
@@ -74,35 +73,31 @@ bot.command("validator", async (response) => {
 <b>Unbonding at time: </b> <i> ${validator.unbonding_time} </i>
 <b>Jailed Status: </b> <i> ${validator.jailed} </i> 
 <b>Delegator No.: </b> <i> ${delegations_length} </i>
-<b>Total delegate: </b> <i> ${total_delegate} </i>
-` , { parse_mode: 'html' });
+<b>Total delegate: </b> <i> ${total_delegate} ISLM </i>
+`
+   , { parse_mode: 'html' });
+
 });
 
-// QUERY BALANCES
 bot.command("balance", async (balance) => {
         var wallet = balance.update.message.text.split('/balance ')[1].trim();
         await axios.get(`https://haqq-api.onepiece-cosmos-explorer.xyz/bank/balances/${wallet}`)
         .then((res) => {
                 var balances = res.data.result; // collect status of validator
-        console.log(balances);
-        bot.telegram.sendMessage(balance.chat.id, `
-        <b>Your balance: </b> <i> ${balances[0].amount} ${balances[0].denom} </i>
-        `, { parse_mode: 'html' });
-
-     }) .catch((e) => {
+                var balances_list = "Your balances: ";
+                for(var i=0; i < balances.length; i++) {
+                        balances_list = `${balances_list}
+                        - ${balances[i].amount} ${balances[i].denom} `
+                }
+                bot.telegram.sendMessage(balance.chat.id, `${balances_list}`, { parse_mode: 'html' });
+        }) .catch((e) => {
                 console.log(e);
                 bot.telegram.sendMessage(balance.chat.id, 'Can\'t get info of your wallet', {});
-     });
+        });
 });
 
 
-// MONITOR PERIODICALLY AND SEND ALERTING TO TELEBOT
-// Current support to query and alert when some event is happened
-// - Validator get Jail
-// - Validator changes status between Inactive/Active
-// - Number of Delegator is changed
-// - Total delegated asset is changed
-
+// MONITOR
 const cron = require('node-cron');
 let task = null;
 
@@ -155,7 +150,7 @@ bot.command("run", async (ctx) =>
 			// Sending alarm if total delegate is changed
 			if (`${total_delegate}` != `${new_total_delegate}`) {
                         bot.telegram.sendMessage(ctx.chat.id, `
-                             - Total delegated asset on your node <b>${val_addr}</b> is changed from <b>${total_delegate}</b> to <b>${new_total_delegate}</b>`
+                             - Total delegated asset on your node <b>${val_addr}</b> is changed from <b>${total_delegate}</b> to <b>${new_total_delegate} ISLM </b>`
                         , { parse_mode: 'html' });
                         total_delegate = new_total_delegate;
                      	}
