@@ -40,6 +40,7 @@ bot.command("validator", async (response) => {
     var validatorAddress = response.update.message.text.split('/validator ')[1].trim();
      val_addr = validatorAddress;
      total_delegate = 0; 
+     validator_status = "Inactive";
     // VALIDATOR INFO
     await axios.get(`https://haqq-api.onepiece-cosmos-explorer.xyz/cosmos/staking/v1beta1/validators/${val_addr}`)
     .then((res) => {
