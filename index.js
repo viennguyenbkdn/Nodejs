@@ -45,7 +45,7 @@ bot.command("validator", async (response) => {
     .then((res) => {
  	validator = res.data.validator; // collect status of validator
   	// Check whether validator active or not
-  	if (validator.status = "BOND_STATUS_BONDED") { validator_status = "Active" }
+  	if (validator.status == "BOND_STATUS_BONDED") { validator_status = "Active" }
      }) .catch((e) => {
      		console.log(e);
      		bot.telegram.sendMessage(response.chat.id, 'Can\'t get info of validator', {});
@@ -114,7 +114,7 @@ bot.command("run", async (ctx) =>
 		     // ALERTING TO TELEBOT FOR CHANGING STATUS OF VALIDATOR NODE
 		     // =========================================================
 		     // Check latest validator status
-		     if (new_validator.status = "BOND_STATUS_BONDED") { new_validator_status = "Active" }
+		     if (new_validator.status == "BOND_STATUS_BONDED") { new_validator_status = "Active" }
 		     else { new_validator_status = "Inactive"}
 		     
 		     // Send alerting to TeleBot if status is changed
