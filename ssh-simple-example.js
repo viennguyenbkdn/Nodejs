@@ -8,10 +8,10 @@ const {NodeSSH} = require('node-ssh')
 const ssh = new NodeSSH()
 
 ssh.connect({
-  host: '65.108.232.174', // Your remote server IP
+  host: 'XXXXX', // Your remote server IP
   username: 'root',
   privateKeyPath: '/root/.ssh/id_rsa', // Your private key on local server
-  passphrase: 'Qu@ngvien03dt2' // passphrase of private key
+  passphrase: 'XXXXX' // passphrase of private key
 })
 .then(function() {
   // Local, Remote'
